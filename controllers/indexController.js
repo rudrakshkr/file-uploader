@@ -3,12 +3,36 @@ const bcrypt = require("bcryptjs");
 const {body, validationResult, matchedData} = require("express-validator");
 const passport = require("passport");
 
+const fileArr = [];
+
 async function logInIndexPageGet(req, res, next) {
     try {
+        const today = new Date();
+        let mm = today.getMonth() + 1;
+        let dd = today.getDate();
+        if (dd < 10) dd = '0' + dd;
+        if (mm < 10) mm = '0' + mm;
+        const formattedToday = dd + '/' + mm + '/' + today.getFullYear();
+
+        console.log(fileArr)
+
         res.render("index", {
-            user: req.user
-        })
+            user: req.user,
+            files: fileArr,
+            date: formattedToday
+        });
     } catch(err) {
+        return next(err);
+    }
+}
+
+async function uploadFilePost(req, res, next) {
+    try {
+        if (req.file) {
+            fileArr.push(req.file);
+        }
+        res.redirect("/"); 
+    } catch (err) {
         return next(err);
     }
 }
@@ -107,5 +131,6 @@ module.exports = {
     authenticateUser,
     signUpPageGet,
     signUpPagePost,
+    uploadFilePost,
     logOutGet,
 }

@@ -5,7 +5,7 @@
             <span class="close-btn" style="cursor:pointer;">&times;</span>
         </div>
         <form class="modal-body" action="/upload" method="POST" enctype="multipart/form-data">
-            <input type="file" id="fileInput" name="file" required>
+            <input type="file" id="fileInput" name="fileInput" required>
             <button type="submit" class="submit-upload">Upload to Cloud</button>
         </form>
     </div>
@@ -67,25 +67,29 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>
-                            Project RoadMap 2024
-                        </td>
-                        <td>2.4MB</td>
-                        <td>Oct 14, 2023</td>
-                        <td>
-                            <div class="action-buttons">
-                                <form method="POST">
-                                    <button type="submit">
-                                        <img src="/assets/icons/delete-icon.png" alt="delete-item" height="25">
-                                    </button>
-                                </form>
-                                <a>
-                                    <img src="/assets/icons/edit-icon.png" alt="edit-icon" height="25">
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
+                    <% if(typeof files !== 'undefined' && files.length > 0) { %>
+                        <% files.forEach(file => { %>
+                            <tr>
+                                <td>
+                                    <%= file.originalname %>
+                                </td>
+                                <td><%= file.size %></td>
+                                <td><%= date %></td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <form method="POST">
+                                            <button type="submit">
+                                                <img src="/assets/icons/delete-icon.png" alt="delete-item" height="25">
+                                            </button>
+                                        </form>
+                                        <a>
+                                            <img src="/assets/icons/edit-icon.png" alt="edit-icon" height="25">
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
                 </tbody>
             </table>
         </div>
