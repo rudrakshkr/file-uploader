@@ -25,6 +25,7 @@ model Users {
   username String @unique @db.VarChar(255)
   fullname String @db.VarChar(255)
   password String @db.VarChar(255)
+  folders Folders[]
   files Files[]
 }
 
@@ -33,6 +34,18 @@ model Files {
   originalName String
   size Int
   date DateTime @default(now())
+
+  folderId Int?
+  folder Folders? @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  userId Int
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Folders {
+  id Int @id @default(autoincrement())
+  name String
+  files Files[]
 
   userId Int
   user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
