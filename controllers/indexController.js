@@ -3,35 +3,135 @@ const bcrypt = require("bcryptjs");
 const {body, validationResult, matchedData} = require("express-validator");
 const passport = require("passport");
 
-const fileArr = [];
-
+const prisma = require("../lib/prisma.cjs");
+const { parse } = require("dotenv");
 async function logInIndexPageGet(req, res, next) {
     try {
-        const {rows} = await pool.query(`
-            SELECT "id", "originalName", "size", TO_CHAR(date, 'DD/MM/YYYY') as date, "userId"
-            FROM "Files"
-        `);
+        const userId = req.user.id;
+
+        const folders = await prisma.folders.findMany({
+            where: {userId: userId}
+        })
+
+        const files = await prisma.files.findMany({
+            where: {
+                userId: userId,
+                folderId: null,
+            },
+        });
+
+        const formattedFiles = files.map(file => {
+            const d = file.date;
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+
+            return {
+                ...file,
+                displayDate: `${dd}/${mm}/${yyyy}`
+            };
+        });
 
         res.render("index", {
             user: req.user,
-            files: rows
+            folders: folders,
+            files: formattedFiles,
+            currentFolder: "My Drive",
+            currentFolderId: null
         });
+
     } catch(err) {
+        return next(err);
+    }
+}
+
+async function uploadFolderPost(req, res, next) {
+    try {
+        await prisma.folders.create({
+            data: {
+                name: req.body.folderInput,
+                userId: req.user.id
+            }
+        })
+
+        res.redirect("/");
+    }
+    catch(err) {
         return next(err);
     }
 }
 
 async function uploadFilePost(req, res, next) {
     try {
+        const folderId = req.body.folderId;
         if (req.file) {
             console.log(req.file);
-            await pool.query(`
-                INSERT INTO "Files" ("originalName", "size", "userId") VALUES($1, $2, $3)
-            `, [req.file.originalname, req.file.size, req.user.id])
+            await prisma.files.create({
+                data: {
+                    originalName: req.file.originalname,
+                    size: req.file.size,
+                    userId: req.user.id,
+                    folderId: folderId ? parseInt(folderId) : null,
+                }
+            })
         }
-        res.redirect("/"); 
+
+        if(folderId !== '') {
+            res.redirect(`/folder/${folderId}`);
+        }
+        else {
+            res.redirect("/");
+        } 
     } catch (err) {
         return next(err);
+    }
+}
+
+async function openFolderGet(req, res, next) {
+    try {
+        const folderId = parseInt(req.params.id);
+        const userId = req.user.id
+        
+        const folders = await prisma.folders.findMany({
+            where: {userId: userId}
+        })
+
+        const files = await prisma.files.findMany({
+            where: {
+                userId: userId,
+                folderId: folderId,
+            },
+        });
+
+        const activeFolder = await prisma.folders.findFirst({
+            where: {
+                id: folderId,
+                userId: userId
+            }
+        })
+
+        const formattedFiles = files.map(file => {
+            const d = file.date;
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+
+            return {
+                ...file,
+                displayDate: `${dd}/${mm}/${yyyy}`
+            };
+        });
+
+        res.render("index", {
+            user: req.user,
+            folders: folders,
+            files: formattedFiles,
+            currentFolder: activeFolder.name,
+            currentFolderId: activeFolder.id
+        })
+    }
+    catch(err) {
+        return next(err)
     }
 }
 
@@ -130,5 +230,7 @@ module.exports = {
     signUpPageGet,
     signUpPagePost,
     uploadFilePost,
+    uploadFolderPost,
+    openFolderGet,
     logOutGet,
 }

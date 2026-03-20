@@ -5,6 +5,7 @@
             <span class="close-btn" style="cursor:pointer;">&times;</span>
         </div>
         <form class="modal-body" action="/upload" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="folderId" value="<%= currentFolderId || '' %>">
             <div class="custom-file-wrapper">
                 <label for="fileInput" class="file-label">
                     <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
@@ -24,7 +25,7 @@
             <h2>Enter the Folder Name</h2>
             <span class="close-btn" style="cursor:pointer;">&times;</span>
         </div>
-        <form class="modal-body" action="/upload" method="POST" enctype="multipart/form-data">
+        <form class="modal-body" action="/add-folder" method="POST">
             <input type="text" id="folderInput" name="folderInput" required>
             <button type="submit" class="submit-upload">Add Folder</button>
         </form>
@@ -49,21 +50,49 @@
         </div>
 
         <div class="folders">
-            <div style="justify-content: space-around;">
-                <div>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <line x1="22" y1="12" x2="2" y2="12"></line> <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"></path> <line x1="6" y1="16" x2="6.01" y2="16"></line> <line x1="10" y1="16" x2="10.01" y2="16"></line> </g></svg>
-                    <p>My Drive</p>
-                </div>
-                <div class="action-buttons">
-                    <form method="POST">
-                        <button type="submit">
-                            <img src="/assets/icons/delete-icon.png" alt="delete-item" height="20">
-                        </button>
-                    </form>
-                    <a>
-                        <img src="/assets/icons/edit-icon.png" alt="edit-icon" height="20">
-                    </a>
-                </div>
+            <div class="folder-item root-folder" style="display: flex; justify-content: space-between; align-items: center;">
+                <a href="/" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" height="24" width="24">
+                        <line x1="22" y1="12" x2="2" y2="12"></line> 
+                        <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"></path> 
+                        <line x1="6" y1="16" x2="6.01" y2="16"></line> 
+                        <line x1="10" y1="16" x2="10.01" y2="16"></line>
+                    </svg>
+                    <p style="margin: 0; font-weight: bold;">My Drive</p>
+                </a>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+
+            <div class="custom-folders-list">
+                <% if(typeof folders !== 'undefined' && folders.length > 0) { %>
+                    <% folders.forEach(folder => { %>
+                        <div class="folder-item" style="display: flex; justify-content: space-between; align-items: center;">
+                            
+                            <a href="/folder/<%= folder.id %>" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit;">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" height="24" width="24">
+                                    <line x1="22" y1="12" x2="2" y2="12"></line> 
+                                    <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"></path> 
+                                    <line x1="6" y1="16" x2="6.01" y2="16"></line> 
+                                    <line x1="10" y1="16" x2="10.01" y2="16"></line>
+                                </svg>
+                                <p style="margin: 0;"><%= folder.name %></p>
+                            </a>
+
+                            <div class="action-buttons" style="display: flex; gap: 8px;">
+                                <form method="POST" action="/folder/<%= folder.id %>/delete" style="margin: 0;">
+                                    <button type="submit" style="background: none; border: none; cursor: pointer; padding: 0;">
+                                        <img src="/assets/icons/delete-icon.png" alt="delete-item" height="23">
+                                    </button>
+                                </form>
+                                <a href="/folder/<%= folder.id %>/edit" style="cursor: pointer;">
+                                    <img src="/assets/icons/edit-icon.png" alt="edit-icon" height="23">
+                                </a>
+                            </div>
+
+                        </div>
+                    <% }) %>
+                <% } %>
             </div>
         </div>
         
@@ -82,7 +111,7 @@
 
         <div class="header-info">
             <div class="destination">
-                <h4><span>Home > </span>My Files</h4>
+                <h4><span><%= currentFolder %> > </span>My Files</h4>
             </div>
             <div class="file-header">
                 <p>All Files</p>
@@ -107,11 +136,11 @@
                                     <td>
                                         <%= file.originalName %>
                                     </td>
-                                    <td><%= file.size %></td>
-                                    <td><%= file.date %></td>
+                                    <td><%= (file.size / 1024).toFixed(1) %> KB</td>
+                                    <td><%= file.displayDate %></td>
                                     <td>
                                         <div class="action-buttons">
-                                            <form method="POST">
+                                            <form method="POST" action="/file/<%= file.id %>/delete">
                                                 <button type="submit">
                                                     <img src="/assets/icons/delete-icon.png" alt="delete-item" height="25">
                                                 </button>
@@ -124,6 +153,14 @@
                                 </tr>
                             <% } %>
                         <% }) %>
+                    <% } %>
+                    <!-- If folder and files empty -->
+                    <% if((typeof files === 'undefined' || files.length === 0) && (typeof folders === 'undefined' || folders.length === 0)) { %>
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 40px; color: #666;">
+                                This folder is empty. Upload a file or create a folder to get started!
+                            </td>
+                        </tr>
                     <% } %>
                 </tbody>
             </table>
