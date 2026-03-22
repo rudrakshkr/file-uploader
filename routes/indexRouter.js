@@ -5,6 +5,7 @@ const {
     signUpPagePost, 
     logInIndexPageGet, 
     uploadFilePost,
+    downloadFileGet,
     uploadFolderPost,
     openFolderGet,
     deleteFolderPost,
@@ -15,23 +16,18 @@ const {
 
 const indexRouter = Router();
 
-// --- MULTER CONFIGURATION ---
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/')
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-    cb(null, file.fieldname + '-' + uniqueSuffix)
-  }
-});
-const upload = multer({ storage: storage });
+// uploadMiddleware
+const uploadMiddleware = require("../uploadMiddleware");
+
+// Initialise the middleware and pass folder name as argument
+const upload = uploadMiddleware("uploads")
 
 // Routes
 indexRouter.get("/", logInIndexPageGet);
 
 indexRouter.post("/upload", upload.single('fileInput'), uploadFilePost);
 indexRouter.post("/file/:id/delete", deleteFilePost);
+indexRouter.get("/file/:id/download", downloadFileGet);
 
 indexRouter.post("/add-folder", uploadFolderPost);
 

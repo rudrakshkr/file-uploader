@@ -3,7 +3,10 @@ const bcrypt = require("bcryptjs");
 const {body, validationResult, matchedData} = require("express-validator");
 const passport = require("passport");
 
+const CustomNotFoundError = require("../errors/CustomNotFoundError");
+
 const prisma = require("../lib/prisma.cjs");
+const { parse } = require("dotenv");
 require("dotenv");
 async function logInIndexPageGet(req, res, next) {
     try {
@@ -70,6 +73,7 @@ async function uploadFilePost(req, res, next) {
                 data: {
                     originalName: req.file.originalname,
                     size: req.file.size,
+                    path: req.file.path,
                     userId: req.user.id,
                     folderId: folderId ? parseInt(folderId) : null,
                 }
@@ -83,6 +87,30 @@ async function uploadFilePost(req, res, next) {
             res.redirect("/");
         } 
     } catch (err) {
+        return next(err);
+    }
+}
+
+async function downloadFileGet(req, res, next) {
+    try {
+        const fileId = parseInt(req.params.id);
+
+        const file = await prisma.files.findFirst({
+            where: {
+                id: fileId,
+                userId: req.user.id
+            }
+        });
+
+        if (!file) {
+            throw new CustomNotFoundError("File not found.");
+        }
+
+        const downloadUrl = file.path.replace('/upload/', '/upload/fl_attachment/');
+
+        res.redirect(downloadUrl);
+    }
+    catch(err) {
         return next(err);
     }
 }
@@ -270,6 +298,7 @@ module.exports = {
     signUpPageGet,
     signUpPagePost,
     uploadFilePost,
+    downloadFileGet,
     uploadFolderPost,
     deleteFolderPost,
     deleteFilePost,
