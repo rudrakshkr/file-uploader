@@ -2,6 +2,7 @@ const pool = require("../config/pool");
 const bcrypt = require("bcryptjs");
 const {body, validationResult, matchedData} = require("express-validator");
 const passport = require("passport");
+const crypto = require("crypto");
 
 const CustomNotFoundError = require("../errors/CustomNotFoundError");
 
@@ -10,6 +11,10 @@ const { parse } = require("dotenv");
 require("dotenv");
 async function logInIndexPageGet(req, res, next) {
     try {
+
+        if (!req.user) {
+            return res.render("index");
+        }
         const userId = req.user.id;
 
         const folders = await prisma.folders.findMany({
@@ -163,6 +168,84 @@ async function openFolderGet(req, res, next) {
     }
 }
 
+async function shareFolderPost(req, res, next) {
+    try {
+        const {folderId, expireTime} = req.body;
+        const id = parseInt(folderId);
+
+        const folder = await prisma.folders.findFirst({
+            where: {id: id, userId: req.user.id}
+        })
+
+        if(!folder) {
+            throw new CustomNotFoundError("User does not own this folder")
+        }
+
+        const token = crypto.randomBytes(20).toString('hex');
+        let expiresAt = null;
+        const hours = parseInt(expireTime);
+
+        if(hours > 0) {
+            expiresAt = new Date(Date.now() + (hours * 60 * 60 * 1000));
+        }
+
+
+        await prisma.folders.update({
+            where: {id: id},
+            data: {
+                shareToken: token,
+                shareExpires: expiresAt
+            }
+        });
+
+        const shareUrl = `${req.protocol}://${req.get('host')}/shared/folder/${token}`;
+        res.json({link: shareUrl})
+    }
+    catch(err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to generate link" });
+    }
+}
+
+async function accessShareFolderGet(req, res, next) {
+    try {
+        const token = req.params.token;
+
+        const folder = await prisma.folders.findUnique({
+            where: {shareToken: token}
+        });
+
+        if(!folder) {
+            throw new CustomNotFoundError("This link is invalid or the folder was deleted");
+        }
+
+        if(folder.shareExpires && folder.shareExpires < new Date()) {
+            throw new CustomNotFoundError("This share link has expired!");
+        }
+
+        const files = await prisma.files.findMany({
+            where: {folderId: folder.id}
+        });
+
+        const formattedFiles = files.map(file => {
+            const d = file.date;
+            const dd = String(d.getDate()).padStart(2, '0');
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const yyyy = d.getFullYear();
+
+            return {
+                ...file,
+                displayDate: `${dd}/${mm}/${yyyy}`
+            };
+        });
+
+        res.render("sharedFolder", {folder, files: formattedFiles})
+    }
+    catch(err) {
+        return next(err)
+    }
+}
+
 async function deleteFolderPost(req, res, next) {
     try {
         const folderId = parseInt(req.params.id);
@@ -249,7 +332,14 @@ const validateUser = [
     body("password").trim().isLength({min: 6, max: 25}).withMessage("Password should be atleast 6 characters long"),
 
     body("username").trim()
-    .isLength({min: 1, max: 10}).withMessage(`Username ${lengthErr}`),
+    .isLength({min: 1, max: 10}).withMessage(`Username ${lengthErr}`)
+    .custom(async (value) => {
+        const {rows} = await pool.query('SELECT id FROM "Users" WHERE username = $1', [value]);
+
+        if(rows.length > 0) {
+            throw new Error("Username already in use");
+        }
+    })
 ]
 
 let signUpPagePost = [
@@ -300,6 +390,8 @@ module.exports = {
     uploadFilePost,
     downloadFileGet,
     uploadFolderPost,
+    shareFolderPost,
+    accessShareFolderGet,
     deleteFolderPost,
     deleteFilePost,
     openFolderGet,

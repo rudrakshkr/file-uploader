@@ -1,0 +1,85 @@
+<html>
+    <head>
+        <title>Shared Folder: <%= folder.name %></title>
+        <link rel="stylesheet" href="/style.css"> 
+    </head>
+    <body>
+        <main class="dashboard">
+            <section class="sidebar">
+                <div class="app-logo">
+                    <img src="/assets/icons/cloud-icon.svg" alt="logo">
+                    <p>CloudVault</p>
+                </div>
+
+                <div style="margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 8px; border: 1px dashed #ccc; text-align: center;">
+                    <svg viewBox="0 0 24 24" fill="none" width="30" height="30" stroke="#666" stroke-width="2" style="margin-bottom: 10px;">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    <p style="margin: 0; font-size: 0.9rem; color: #666; font-weight: bold;">Secure Shared View</p>
+                    <p style="margin: 5px 0 0 0; font-size: 0.8rem; color: #999;">Read-only access</p>
+                </div>
+            </section>
+
+            <section class="files-section">
+                
+                <div class="user-info">
+                    <p>Guest Viewer</p>
+                    <a class="logout-btn" href="/" style="text-decoration: none;">
+                        <p>Create your own Vault</p> 
+                    </a>
+                </div>
+
+                <hr>
+
+                <div class="header-info">
+                    <div class="destination">
+                        <h4><span>Shared Links > </span><%= folder.name %></h4>
+                    </div>
+                    <div class="file-header">
+                        <p>All Files</p>
+                        <p>Status: Read-Only</p>
+                    </div>
+                </div>
+
+                <div class="category-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Size</th>
+                                <th>Upload Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if(typeof files !== 'undefined' && files.length > 0) { %>
+                                <% files.forEach(file => { %>
+                                    <tr>
+                                        <td>
+                                            <%= file.originalName %>
+                                        </td>
+                                        <td><%= (file.size / 1024).toFixed(1) %> KB</td>
+                                        <td><%= file.displayDate %></td>
+                                        <td>
+                                            <div class="action-buttons">
+                                                <a href="<%= file.path.replace('/upload/', '/upload/fl_attachment/') %>" title="Download File">
+                                                    <img src="/assets/icons/download-icon.svg" alt="download-icon" height="25">
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="4" style="text-align: center; padding: 40px; color: #666;">
+                                        This shared folder is currently empty.
+                                    </td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </body>
+</html>

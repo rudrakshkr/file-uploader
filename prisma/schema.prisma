@@ -21,33 +21,36 @@ model Session {
 }
 
 model Users {
-  id Int @id @default(autoincrement())
-  username String @unique @db.VarChar(255)
-  fullname String @db.VarChar(255)
-  password String @db.VarChar(255)
-  folders Folders[]
-  files Files[]
+  id       Int       @id @default(autoincrement())
+  username String    @unique @db.VarChar(255)
+  fullname String    @db.VarChar(255)
+  password String    @db.VarChar(255)
+  folders  Folders[]
+  files    Files[]
 }
 
 model Files {
-  id Int @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   originalName String
-  size Int
-  date DateTime @default(now())
-  path String
+  size         Int
+  date         DateTime @default(now())
+  path         String
 
   folderId Int?
-  folder Folders? @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  folder   Folders? @relation(fields: [folderId], references: [id], onDelete: Cascade)
 
   userId Int
-  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Folders {
-  id Int @id @default(autoincrement())
-  name String
+  id    Int     @id @default(autoincrement())
+  name  String
   files Files[]
 
+  shareToken   String?   @unique
+  shareExpires DateTime?
+
   userId Int
-  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

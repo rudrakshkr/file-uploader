@@ -8,13 +8,12 @@ function uploadMiddleware(folderName) {
         cloudinary: cloudinary,
         params: (req, file) => {
             const folderPath = `${folderName.trim()}`;
-            const fileExtension = path.extname(file.originalname).substring(1);
             const publicId = `${file.fieldname}-${Date.now()}`;
 
             return {
                 folder: folderPath,
                 public_id: publicId,
-                format: fileExtension
+                resource_type: 'auto'
             };
         },
     });

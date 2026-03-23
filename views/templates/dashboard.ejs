@@ -31,6 +31,41 @@
         </form>
     </div>
 </div>
+
+<div id="shareModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Share Folder</h2>
+            <span class="close-btn share-close-btn" style="cursor:pointer;">&times;</span> 
+        </div>
+        
+        <form class="modal-body" action="/folder/share" method="POST">
+            
+            <input type="hidden" id="shareFolderId" name="folderId" value="">
+
+            <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="expireTime" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Link Expiration:</label>
+                <select id="expireTime" name="expireTime" style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 1rem;">
+                    <option value="1">1 Hour</option>
+                    <option value="24" selected>1 Day</option>
+                    <option value="168">7 Days</option>
+                    <option value="0">Never Expires</option>
+                </select>
+            </div>
+
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">Shareable Link:</label>
+            <div class="share-link-wrapper" style="display: flex; gap: 10px; margin-bottom: 1.5rem;">
+                <input type="text" id="generatedShareLink" readonly placeholder="Click 'Generate Link' to create..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 6px; background-color: #f8f9fa; color: #555;">
+                <button type="button" id="copyLinkBtn" style="padding: 10px 15px; background: #e9ecef; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s;">
+                    Copy
+                </button>
+            </div>
+
+            <button type="submit" class="submit-upload" style="width: 100%;">Generate Link</button>
+        </form>
+    </div>
+</div>
+
 <main class="dashboard">
     <section class="sidebar">
         <div class="app-logo">
@@ -85,8 +120,10 @@
                                         <img src="/assets/icons/delete-icon.png" alt="delete-item" height="23">
                                     </button>
                                 </form>
+                                <button type="button" class="openShareButton" data-folder-id="<%= folder.id %>" style="background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center;">
+                                    <img src="/assets/icons/share-icon.svg" alt="share-icon" height="25"> 
+                                </button>
                             </div>
-
                         </div>
                     <% }) %>
                 <% } %>
@@ -97,7 +134,7 @@
     <section class="files-section">
         <div class="user-info">
             <p><%= user.fullname %></p>
-            <img src="/assets/my-photo.jpeg" alt="my-photu">
+            <img src="/assets/luffy.jpg" alt="my-photu">
             <a class="logout-btn" href="/log-out">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <path d="M14 20H6C4.89543 20 4 19.1046 4 18L4 6C4 4.89543 4.89543 4 6 4H14M10 12H21M21 12L18 15M21 12L18 9" stroke="#565D6DFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
                 <p>Log Out</p> 
@@ -148,12 +185,8 @@
                                                 <img src="/assets/icons/link-icon.svg" alt="link-icon" height="25">
                                             </a>
 
-                                            <a href="/file/<%= file.id %>/download">
+                                            <a href="<%= file.path.includes('/image/') || file.path.includes('/video/') ? file.path.replace('/upload/', '/upload/fl_attachment/') : file.path %>" title="Download File">
                                                 <img src="/assets/icons/download-icon.svg" alt="download-icon" height="25">
-                                            </a>
-
-                                            <a href="">
-                                                <img src="/assets/icons/share-icon.svg" alt="share-icon" height="25">
                                             </a>
                                         </div>
                                     </td>
@@ -185,6 +218,9 @@
         const folderModal = document.getElementById("folderModal");
         const btnFolder = document.getElementById("openFolderBtn");
 
+        // Sharing Modal
+        const shareModal = document.getElementById("shareModal")
+
         // Close buttton
         const closeBtn = document.querySelector(".close-btn");
 
@@ -202,6 +238,7 @@
             if (event.target.classList.contains("close-btn")) {
                 uploadModal.style.display = "none";
                 folderModal.style.display = "none";
+                shareModal.style.display = "none";
             }
 
             if (event.target === uploadModal) {
@@ -209,6 +246,9 @@
             }
             else if(event.target === folderModal) {
                 folderModal.style.display = "none";
+            }
+            else if(event.target === shareModal) {
+                shareModal.style.display = "none";
             }
         }
 
@@ -220,5 +260,77 @@
             const fileName = e.target.files[0]?.name || "No file selected";
             fileNameDisplay.textContent = fileName;
         });
+
+        // Open Share Modal and add the Folder ID
+        document.querySelectorAll('.openShareButton').forEach(button => {
+            button.addEventListener('click', function() {
+                const currentFolderId = this.getAttribute('data-folder-id');
+                
+                document.getElementById('shareFolderId').value = currentFolderId;
+                
+                document.getElementById('generatedShareLink').value = '';
+                
+                document.getElementById('shareModal').style.display = 'block';
+            });
+        });
+
+        // Copy text logic
+        document.getElementById('copyLinkBtn').addEventListener('click', function() {
+            const linkInput = document.getElementById('generatedShareLink');
+            
+            if (linkInput.value) {
+                linkInput.select(); 
+                linkInput.setSelectionRange(0, 99999);
+                
+                navigator.clipboard.writeText(linkInput.value);
+                
+                this.textContent = 'Copied!';
+                this.style.background = '#d4edda';
+                
+                setTimeout(() => {
+                    this.textContent = 'Copy';
+                    this.style.background = '#e9ecef';
+                }, 2000);
+            }
+        });
+
+
+        // Share form logic
+        const shareForm = document.querySelector("#shareModal form");
+
+        shareForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const folderId = document.getElementById('shareFolderId').value;
+            const expireTime = document.getElementById('expireTime').value;
+            const submitBtn = shareForm.querySelector('.submit-upload');
+            
+            submitBtn.textContent = "Generating...";
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch('/folder/share', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({folderId, expireTime})
+                })
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('generatedShareLink').value = data.link;
+                    submitBtn.textContent = "Generate New Link";
+                } else {
+                    alert(data.error || "Something went wrong!");
+                    submitBtn.textContent = "Generate Link";
+                }
+            }
+            catch (err) {
+                console.error(err);
+                alert("Failed to connect to server.");
+            } finally {
+                submitBtn.disabled = false;
+            }
+        })
     });
 </script>

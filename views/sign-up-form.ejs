@@ -1,25 +1,74 @@
-<html>
-    <head>
-        <title><%= title %></title>
-        <link rel="stylesheet" href="style.css">
-    </head>
-    <body>
-        <%- include("../errors/errors.ejs") %>
-        <h1>Sign Up</h1>
-        <form action="/sign-up" method="POST">
-            <label for="firstName">First Name: </label>
-            <input id="firstName" name="firstName" placeholder="First Name" type="text" />
-            
-            <label for="lastName">Last Name: </label>
-            <input id="lastName" name="lastName" placeholder="Last Name" type="text" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <main>
+            <section class="header">
+                <div>
+                    <img src="/assets/icons/cloud-icon.svg" alt="cloud-icon" height="25">
+                    <p>CloudVault</p>
+                </div>
+                <p>Your secure gateway to the cloud</p>
+            </section>
 
-            <label for="username">Username: </label>
-            <input id="username" name="username" placeholder="User Name" type="text" />
-            
-            <label for="password">Password</label>
-            <input id="password" name="password" type="password" />
+            <section class="log-in" style="width: 100%; max-width: 450px; box-sizing: border-box;">
+                <div class="log-in-header">
+                    <h3>Sign Up</h3>
+                    <p>Create your account to start uploading</p>
+                </div>
+                
+                <form action="/sign-up" method="POST">
+                    
+                    <%- include("../errors/errors.ejs") %>
 
-            <button type="submit">Sign Up</button>
-        </form>
-    </body>
+                    <div style="display: flex; gap: 1rem; flex-direction: column;">
+                        <div style="flex: 1;">
+                            <label for="firstName">First Name</label>
+                            <div class="input-wrapper">
+                                <input id="firstName" name="firstName" placeholder="First Name" type="text" required/>
+                            </div>
+                        </div>
+
+                        <div style="flex: 1;">
+                            <label for="lastName">Last Name</label>
+                            <div class="input-wrapper">
+                                <input id="lastName" name="lastName" placeholder="Last Name" type="text" required/>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="username">Username</label>
+                        <div class="input-wrapper">
+                            <img src="/assets/icons/@icon.svg" class="field-icon" alt="user icon">
+                            <input id="username" name="username" placeholder="username" type="text" required/>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="password">Password</label>
+                        <div class="input-wrapper">
+                            <img src="/assets/icons/lock-icon.svg" class="field-icon" alt="lock icon">
+                            <input id="password" name="password" type="password" placeholder="password" required/>
+                        </div>
+                    </div>
+
+                    <button type="submit">Sign Up</button>
+                </form>
+                
+                <p style="text-align: center; margin-top: 1rem; color: rgb(91, 91, 91);">
+                    Already have an account? 
+                    <span><a href="/" style="color: #1F8CF9FF; text-decoration: none; font-weight: bold;">Log in</a></span>
+                </p>
+            </section>
+
+        </main>
+    </div>
+</body>
 </html>

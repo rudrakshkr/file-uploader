@@ -1,5 +1,4 @@
 const { Router } = require("express");
-const multer = require("multer");
 const { 
     signUpPageGet, 
     signUpPagePost, 
@@ -8,6 +7,8 @@ const {
     downloadFileGet,
     uploadFolderPost,
     openFolderGet,
+    shareFolderPost,
+    accessShareFolderGet,
     deleteFolderPost,
     deleteFilePost,
     authenticateUser, 
@@ -16,27 +17,45 @@ const {
 
 const indexRouter = Router();
 
+// Auth middleware function
+function requireAuth(req, res, next) {
+    if (req.isAuthenticated && req.isAuthenticated()) {
+        return next(); 
+    }
+    // Kick unauthenticated users back to the root route (your login page)
+    res.redirect('/'); 
+}
+
 // uploadMiddleware
 const uploadMiddleware = require("../uploadMiddleware");
 
 // Initialise the middleware and pass folder name as argument
 const upload = uploadMiddleware("uploads")
 
-// Routes
+
+// --------------------------------------- ROUTES -------------------------------------------------------
+
+// Log In Page
 indexRouter.get("/", logInIndexPageGet);
 
-indexRouter.post("/upload", upload.single('fileInput'), uploadFilePost);
-indexRouter.post("/file/:id/delete", deleteFilePost);
-indexRouter.get("/file/:id/download", downloadFileGet);
 
-indexRouter.post("/add-folder", uploadFolderPost);
+// Protected Routes
+indexRouter.post("/upload", requireAuth, upload.single('fileInput'), uploadFilePost);
+indexRouter.post("/file/:id/delete", requireAuth, deleteFilePost);
+indexRouter.get("/file/:id/download", requireAuth, downloadFileGet);
 
-indexRouter.get("/folder/:id", openFolderGet);
-indexRouter.post("/folder/:id/delete", deleteFolderPost);
+indexRouter.post("/add-folder", requireAuth, uploadFolderPost);
+indexRouter.post("/folder/share", requireAuth, shareFolderPost);
+indexRouter.get("/folder/:id", requireAuth, openFolderGet);
+indexRouter.post("/folder/:id/delete", requireAuth, deleteFolderPost);
 
+indexRouter.get("/log-out", requireAuth, logOutGet);
+
+
+// Public Routes
+indexRouter.get("/shared/folder/:token", accessShareFolderGet);
 indexRouter.get("/sign-up", signUpPageGet);
 indexRouter.post("/sign-up", signUpPagePost);
 indexRouter.post("/log-in", authenticateUser);
-indexRouter.get("/log-out", logOutGet);
 
 module.exports = indexRouter;
