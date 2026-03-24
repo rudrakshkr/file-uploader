@@ -255,7 +255,7 @@ async function deleteFolderPost(req, res, next) {
             }
         })
 
-        res.redirect('back')
+        res.redirect('/')
 
     }
     catch(err) {
