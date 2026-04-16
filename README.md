@@ -2,6 +2,8 @@
 
 A secure, full-stack cloud storage web application built with Node.js, Express, and PostgreSQL. CloudVault allows users to securely upload, manage, and share their files and folders, complete with time-limited public sharing links.
 
+Check it out live at --> https://file-uploader-epti.onrender.com/
+
 ## ✨ Features
 
 * **User Authentication:** Secure sign-up and login functionality using Passport.js and bcrypt password hashing.
